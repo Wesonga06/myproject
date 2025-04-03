@@ -1,11 +1,11 @@
 <?php
+session_start();
 
-
+// Simulating dynamic user data for the dashboard
+$user_name = $_SESSION['user_name'] ?? 'Guest';
+$dashboard_message = "Welcome to your Money Tracking Dashboard! Manage your finances efficiently.";
 
 ?>
-
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,46 +23,49 @@
             color: #333;
             display: flex;
             flex-direction: column;
-            justify-content: start;
             height: 100vh;
+        }
+        header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 20px;
             text-align: center;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
         }
-        .header {
+        .header-title {
             font-size: 2.5rem;
-            font-weight: 600;
-            margin-top: 20px;
-            background-color:  #2c3e50;
-            color: #fff;
-        }
-        .sub-header {
-            font-size: 1.2rem;
-            margin-bottom: 20px;
-            max-width: 80%;
-            margin: 0 auto;
-            color: #444;
-        }
-        header{
-          background-color:  #2c3e50;  
+            font-weight: bold;
+            margin-bottom: 10px;
         }
         .navbar {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 10px;
-            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
             margin-top: 15px;
-            display: inline-block;
         }
         .navbar a {
-            color: #333;
+            color: white;
             text-decoration: none;
             font-size: 1rem;
-            font-weight: 600;
+            font-weight: bold;
             padding: 8px 15px;
             border-radius: 5px;
-            background: #fff;
+            background: #34495e;
             transition: 0.3s;
         }
         .navbar a:hover {
-            background: #ddd;
+            background: #1abc9c;
+        }
+        .sub-header {
+            font-size: 1.2rem;
+            text-align: center;
+            margin: 20px auto;
+            color: #444;
+            max-width: 80%;
         }
         .card-container {
             display: flex;
@@ -75,9 +78,9 @@
             background: #C6DEF1;
             padding: 20px;
             width: 260px;
-            transition: transform 0.3s, box-shadow 0.3s;
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
             text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
         }
         .card:hover {
             transform: translateY(-5px);
@@ -101,7 +104,7 @@
             line-height: 1.5;
         }
         .logo {
-            width: 150px;
+            width: 120px;
             height: auto;
             display: block;
             margin: 15px auto;
@@ -109,25 +112,22 @@
     </style>
 </head>
 <body>
-  <header>
-    <div class="header">Money Tracking Dashboard</div>
-    <img src="MART.png" alt="Money Accounting & Resource Tracking Logo" class="logo">
-    <div class="navbar">
-        <a href="register.php">Click here to register</a>
-        <nav>
-            <ul>
-                <li><a href="dashboard.php">Dashboard</a></li>
-                <li><a href="inventory.php">Inventory</a></li>
-                <li><a href="expenses.php">Expenses</a></li>
-                <li><a href="budget.php">Budget</a></li>
-                <li><a href="report.php">Report</a></li>
-                <li><a href="account.html">Account</a></li>
-            </ul>
-        </nav>
-    </div>
+    <header>
+        <img src="MART.png" alt="Money Accounting & Resource Tracking Logo" class="logo">
+        <div class="header-title">Money Tracking Dashboard</div>
+        <div class="navbar">
+            <a href="dashboard.php">Dashboard</a>
+            <a href="inventory.php">Inventory</a>
+            <a href="expenses.php">Expenses</a>
+            <a href="budget.php">Budget</a>
+            <a href="report.php">Reports</a>
+            <a href="profile.php">Profile</a>
+        </div>
     </header>
+
     <div class="sub-header">
-        Easily manage your expenses, savings, and financial goals. Join MART to boost your savings and track your financial spending efficiently.
+        <p><?php echo htmlspecialchars($dashboard_message); ?></p>
+        <p>Hello, <strong><?php echo htmlspecialchars($user_name); ?></strong>. Explore tools to track your expenses, savings, and financial goals effectively.</p>
     </div>
 
     <div class="card-container">
@@ -151,7 +151,11 @@
             <h3>Secure & Private</h3>
             <p>Your financial data is protected with top security standards.</p>
         </div>
+        <div class="card">
+            <img src="https://static.vecteezy.com/system/resources/previews/026/740/313/original/financial-growth-and-enrichment-business-and-investment-value-increase-income-and-wage-growth-economic-development-economic-and-market-stability-happy-man-at-the-top-of-the-graph-with-a-coin-vector.jpg" alt="Track Progress">
+            <h3>Track Progress</h3>
+            <p>Visualize your financial journey through detailed analytics.</p>
+        </div>
     </div>
-
 </body>
 </html>

@@ -1,83 +1,56 @@
 <?php
-require 'db_connect.php';
+require 'db_connect.php'; // Include your database connection script
 session_start();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $email = $_POST['email'];
-    $password = $_POST['password'];
+// Initialize error message
+$errorMessage = "";
 
-    $stmt = $db->prepare("SELECT id, password FROM users WHERE email = ?");
+// Handle login form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = $_POST['email']; // Retrieve email from the form
+    $password = $_POST['password']; // Retrieve password from the form
+
+    // Prepare statement to fetch user details
+    $stmt = $db->prepare("SELECT id, password, role FROM users WHERE email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
 
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
+
+        // Verify password
         if (password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id']; // Save user ID in session
-            echo "Login successful!";
+            // Save user ID and role to session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+
+            // Redirect based on role
+            if ($user['role'] === 'admin') {
+                header("Location: admin.php"); // Redirect to admin panel
+            } else {
+                header("Location: dashboard.php"); // Redirect to user dashboard
+            }
+            exit();
         } else {
-            echo "Invalid password.";
+            $errorMessage = "Invalid password.";
         }
     } else {
-        echo "User not found.";
+        $errorMessage = "User not found.";
     }
+
     $stmt->close();
 }
 ?>
-
-
 
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    <link rel="icon" type="css" href="MART.png">
-    <link rel="stylesheet" href="Indexcss.css">
-    <script>
-    const loginForm = document.getElementById('login-form');
-
-    // Validation patterns
-    const namePattern = /^[A-Za-z\s]+$/;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/;
-
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            if (validateLogin()) {
-                alert('Login successful! Redirecting to home page...');
-                window.location.href = 'transaction.php';
-            }
-        });
-    }
-
-function validateLoginEmail() {
-        const errorMessage = document.getElementById('login-email-error');
-        if (!emailPattern.test(loginForm.email.value)) {
-            errorMessage.textContent = 'Enter a valid email address.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-
-    function validateLoginPassword() {
-        const errorMessage = document.getElementById('login-password-error');
-        if (!passwordPattern.test(loginForm.password.value)) {
-            errorMessage.textContent = 'Invalid password format.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-    </script>
-
-<style>
+    <title>Login | Money Tracker</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <style>
         body {
             font-family: 'Poppins', sans-serif;
             margin: 0;
@@ -85,99 +58,114 @@ function validateLoginEmail() {
             background-color: #f4f4f4;
             color: #333;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
         }
-        header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-        .logo {
-            width: 10px;
-            margin-top: 10px;
-        }
-        main {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.9);
+        form {
+            background-color: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            margin-top: 20px;
-        }
-        h2 {
-            text-align: center;
-        }
-        form {
-            display: flex;
-            flex-direction: column;
+            width: 100%;
+            max-width: 400px;
         }
         label {
-            font-weight: 600;
-            margin: 5px 0;
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
         }
-        input {
+        input, button {
+            width: 100%;
             padding: 10px;
+            margin-top: 5px;
             border-radius: 5px;
             border: 1px solid #ccc;
-            font-size: 1rem;
-        }
-        .error-message {
-            color: red;
-            font-size: 0.85rem;
         }
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px;
-            margin-top: 15px;
-            border: none;
-            border-radius: 5px;
+            font-weight: bold;
             cursor: pointer;
-            font-size: 1rem;
+            margin-top: 15px;
         }
         button:hover {
             background-color: #45a049;
         }
-        .register-link {
+        .error-message {
+            color: red;
+            font-size: 0.85rem;
             text-align: center;
-            margin-top: 10px;
-        }
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9rem;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('login-form');
+
+            // Validation patterns
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/;
+
+            loginForm.addEventListener('submit', function(event) {
+                if (!validateLogin()) {
+                    event.preventDefault(); // Stop form submission if validation fails
+                }
+            });
+
+            function validateLogin() {
+                return validateEmail() && validatePassword();
+            }
+
+            function validateEmail() {
+                const email = document.getElementById('email').value;
+                const errorMessage = document.getElementById('email-error');
+
+                if (!emailPattern.test(email)) {
+                    errorMessage.textContent = 'Enter a valid email address.';
+                    errorMessage.style.color = 'red';
+                    return false;
+                }
+                errorMessage.textContent = '';
+                return true;
+            }
+
+            function validatePassword() {
+                const password = document.getElementById('password').value;
+                const errorMessage = document.getElementById('password-error');
+
+                if (!passwordPattern.test(password)) {
+                    errorMessage.textContent = 'Password must contain at least one uppercase, one lowercase, one digit, and one special character.';
+                    errorMessage.style.color = 'red';
+                    return false;
+                }
+                errorMessage.textContent = '';
+                return true;
+            }
+        });
+    </script>
 </head>
 <body>
-<header>
-        <h1>Login</h1>
-        <img src="MART.png" alt="Money Accounting & Resource Tracking">
-    </header>
-    <main>
-        <!-- Login Form -->
-        <section id="login">
-            <h2>Login</h2>
-            <form id="login-form">
-                <label for="login-email">Email:</label>
-                <input type="email" id="login-email" name="email" required>
-                <span id="login-email-error" class="error-message"></span>
+    <form id="login-form" action="login.php" method="POST">
+        <h2>Login to Your Account</h2>
 
-                <label for="login-password">Password:</label>
-                <input type="password" id="login-password" name="password" required>
-                <span id="login-password-error" class="error-message"></span>
+        <!-- Display error message -->
+        <div class="error-message">
+            <?php if (!empty($errorMessage)) echo htmlspecialchars($errorMessage); ?>
+        </div>
 
-                <button type="submit">Login</button>
-            </form>
-            <p>New user? <a href="register.php">Register here</a></p>
-        </section>
-    </main>
-    <footer>
-        <p>&copy; 2025 Money Tracker</p>
-      </footer>
+        <!-- Email -->
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <span id="email-error" class="error-message"></span>
+
+        <!-- Password -->
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <span id="password-error" class="error-message"></span>
+
+        <!-- Submit -->
+        <button type="submit">Login</button>
+        <p>New user? <a href="register.php">Register here</a></p>
+    </form>
 </body>
 </html>

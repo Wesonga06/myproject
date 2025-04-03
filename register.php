@@ -1,233 +1,213 @@
 <?php
-require 'db_connect.php';
+require 'db_connect.php'; // Include your database connection script
+session_start(); // Start session to handle user data
 
+// Initialize error message
+$errorMessage = "";
+
+// Handle registration form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = $_POST['username'];
-    $email = $_POST['email'];
-    $password = password_hash($_POST['password'], PASSWORD_DEFAULT); // Hash the password
+    // Collect form data
+    $user_name = trim($_POST['user_name']);
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+    $password = $_POST['password'];
+    $confirmPassword = $_POST['confirm-password'];
+    $role = $_POST['role'] ?? 'user'; // Default role is 'user'
 
-    $stmt = $db->prepare("INSERT INTO users (username, email, password) VALUES (?, ?, ?)");
-    $stmt->bind_param("sss", $username, $email, $password);
-
-    if ($stmt->execute()) {
-        echo "User registered successfully!";
+    // Password validation
+    if ($password !== $confirmPassword) {
+        $errorMessage = "Passwords do not match.";
+    } elseif (strlen($password) < 8 || !preg_match('/[A-Z]/', $password) || !preg_match('/\d/', $password) || !preg_match('/[@#$%^&+=!]/', $password)) {
+        $errorMessage = "Password must be at least 8 characters long, contain one uppercase letter, one number, and one special character.";
     } else {
-        echo "Registration failed: " . $stmt->error;
+        // Check for duplicate email
+        $email_check = $db->prepare("SELECT id FROM users WHERE email = ?");
+        $email_check->bind_param("s", $email);
+        $email_check->execute();
+        $email_check->store_result();
+
+        if ($email_check->num_rows > 0) {
+            $errorMessage = "An account with this email already exists.";
+        } else {
+            // Hash the password and insert data into database
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+            $stmt = $db->prepare("INSERT INTO users (user_name, email, password, role) VALUES (?, ?, ?, ?)");
+
+            if ($stmt) {
+                $stmt->bind_param("ssss", $user_name, $email, $hashedPassword, $role);
+
+                if ($stmt->execute()) {
+                    // Save user ID and role into session
+                    $_SESSION['user_id'] = $db->insert_id;
+                    $_SESSION['role'] = $role;
+
+                    // Redirect based on user role
+                    header("Location: " . ($role === 'admin' ? "admin.php" : "dashboard.php"));
+                    exit();
+                } else {
+                    $errorMessage = "Registration failed: " . $stmt->error;
+                }
+                $stmt->close();
+            } else {
+                $errorMessage = "Failed to prepare the SQL statement.";
+            }
+        }
+        $email_check->close();
     }
-    $stmt->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register | Money Tracker</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>User Registration</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
-    <link rel="stylesheet" href="{{ asset('css/styles.css') }}"> <!-- External CSS -->
-    <link rel="icon" href="MART.png">
     <style>
         body {
             font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
             background-color: #f4f4f4;
-            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            height: 100vh;
         }
-         /* Header */
-    header {
-        background-color: #2c3e50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
-
-        .logo {
-            width: 120px;
-            margin-top: 10px;
-        }
-        main {
-            width: 100%;
-            max-width: 400px;
-            background: rgba(255, 255, 255, 0.9);
+        form {
+            background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
-            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
         }
         h2 {
             text-align: center;
-        }
-        .form {
-            display: flex;
-            flex-direction: column;
+            margin-bottom: 20px;
         }
         label {
-            font-weight: 600;
-            margin: 5px 0;
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
         }
-        input {
+        input, select, button {
+            width: 100%;
             padding: 10px;
-            border-radius: 5px;
+            margin-bottom: 15px;
             border: 1px solid #ccc;
-            font-size: 1rem;
-        }
-        .error-message {
-            color: red;
-            font-size: 0.85rem;
+            border-radius: 5px;
         }
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px;
-            margin-top: 15px;
             border: none;
-            border-radius: 5px;
             cursor: pointer;
-            font-size: 1rem;
+            font-weight: bold;
         }
         button:hover {
             background-color: #45a049;
         }
-        .login-link {
+        .error-message {
+            color: red;
             text-align: center;
-            margin-top: 10px;
-        }
-        footer {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 0.9rem;
+            margin-bottom: 15px;
         }
     </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const registerForm = document.getElementById('register-form');
+            const namePattern = /^[A-Za-z\s]+$/;
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/;
 
-<script>
-      document.addEventListener('DOMContentLoaded', function() {
-    const registerForm = document.getElementById('register-form');
+            registerForm.addEventListener('submit', function (event) {
+                if (!validateForm()) {
+                    event.preventDefault();
+                }
+            });
 
-    // Validation patterns
-    const namePattern = /^[A-Za-z\s]+$/;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordPattern = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!]).{8,}$/;
+            function validateForm() {
+                return validateUsername() && validateEmail() && validatePassword() && validateConfirmPassword();
+            }
 
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-            if (validateRegistration()) {
-                alert('Registration successful! Redirecting to home page...');
-                window.location.href = 'transaction.php';
+            function validateUsername() {
+                const usernameInput = document.getElementById('user_name');
+                const error = document.getElementById('username-error');
+                if (!namePattern.test(usernameInput.value)) {
+                    error.textContent = "Username must only contain letters.";
+                    return false;
+                }
+                error.textContent = "";
+                return true;
+            }
+
+            function validateEmail() {
+                const emailInput = document.getElementById('email');
+                const error = document.getElementById('email-error');
+                if (!emailPattern.test(emailInput.value)) {
+                    error.textContent = "Enter a valid email address.";
+                    return false;
+                }
+                error.textContent = "";
+                return true;
+            }
+
+            function validatePassword() {
+                const passwordInput = document.getElementById('password');
+                const error = document.getElementById('password-error');
+                if (!passwordPattern.test(passwordInput.value)) {
+                    error.textContent = "Password must include at least one uppercase letter, one number, and one special character.";
+                    return false;
+                }
+                error.textContent = "";
+                return true;
+            }
+
+            function validateConfirmPassword() {
+                const passwordInput = document.getElementById('password');
+                const confirmPasswordInput = document.getElementById('confirm-password');
+                const error = document.getElementById('confirm-password-error');
+                if (passwordInput.value !== confirmPasswordInput.value) {
+                    error.textContent = "Passwords do not match.";
+                    return false;
+                }
+                error.textContent = "";
+                return true;
             }
         });
-    }
-
-    function validateRegistration() {
-        return validateUsername() && validateEmail() && validatePassword() && validateConfirmPassword() && validateDOB();
-    }
-
-    function validateLogin() {
-        return validateLoginEmail() && validateLoginPassword();
-    }
-
-    function validateUsername() {
-        const errorMessage = document.getElementById('username-error');
-        if (!namePattern.test(registerForm.username.value)) {
-            errorMessage.textContent = 'Username must contain only alphabetic characters.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-
-    function validateEmail() {
-        const errorMessage = document.getElementById('email-error');
-        if (!emailPattern.test(registerForm.email.value)) {
-            errorMessage.textContent = 'Enter a valid email address.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-
-    function validatePassword() {
-        const errorMessage = document.getElementById('password-error');
-        if (!passwordPattern.test(registerForm.password.value)) {
-            errorMessage.textContent = 'Password must contain at least one uppercase, one lowercase, one digit, and one special character.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-
-    function validateConfirmPassword() {
-        const errorMessage = document.getElementById('confirm-password-error');
-        if (registerForm.password.value !== registerForm['confirm-password'].value) {
-            errorMessage.textContent = 'Passwords do not match.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-
-    function validateDOB() {
-        const errorMessage = document.getElementById('dob-error');
-        const today = new Date();
-        const dobDate = new Date(registerForm.dob.value);
-        const age = today.getFullYear() - dobDate.getFullYear();
-        if (age < 18) {
-            errorMessage.textContent = 'You must be at least 18 years old to register.';
-            errorMessage.style.color = 'red';
-            return false;
-        }
-        errorMessage.textContent = '';
-        return true;
-    }
-});
     </script>
 </head>
 <body>
-<header>
-        <h1>Register</h1>
-        <img src="MART.png" alt="Money Accounting & Resource Tracking" class="logo">
-    </header>
-
-    <main>
+    <form id="register-form" method="POST" action="">
         <h2>Create Your Account</h2>
-        <form class="form" id="register-form" action="{{ route('register') }}" method="POST">
+        <?php if (!empty($errorMessage)): ?>
+            <p class="error-message"><?= htmlspecialchars($errorMessage); ?></p>
+        <?php endif; ?>
+        <label for="user_name">Username:</label>
+        <input type="text" id="user_name" name="user_name" required>
+        <span id="username-error" class="error-message"></span>
 
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-            <span id="username-error" class="error-message"></span>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <span id="email-error" class="error-message"></span>
 
-            <label for="email">Email:</label>
-            <input type="email" id="email" name="email" required>
-            <span id="email-error" class="error-message"></span>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <span id="password-error" class="error-message"></span>
 
-            <label for="password">Password:</label>
-            <input type="password" id="password" name="password" required>
-            <span id="password-error" class="error-message"></span>
+        <label for="confirm-password">Confirm Password:</label>
+        <input type="password" id="confirm-password" name="confirm-password" required>
+        <span id="confirm-password-error" class="error-message"></span>
 
-            <label for="confirm-password">Confirm Password:</label>
-            <input type="password" id="confirm-password" name="confirm-password" required>
-            <span id="confirm-password-error" class="error-message"></span>
+        <label for="role">Role:</label>
+        <select id="role" name="role">
+            <option value="user">User</option>
+            <option value="admin">Admin</option>
+        </select>
 
-            <label for="dob">Date of Birth:</label>
-            <input type="date" id="dob" name="dob" required>
-            <span id="dob-error" class="error-message"></span>
-
-            <button type="submit">Register</button>
-        </form>
-        <p class="login-link">Already have an account? <a href="login.php">Login here</a></p>
-    </main>
-
-    <footer>
-        <p>&copy; 2025 Money Tracker</p>
-    </footer>
+        <button type="submit">Register</button>
+    </form>
 </body>
 </html>
+

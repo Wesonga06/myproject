@@ -22,7 +22,7 @@ if (!$user || $user['role'] !== 'admin') {
 
 // Fetch all users
 $users = [];
-$result = $db->query("SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC");
+$result = $db->query("SELECT id, user_name, email, role FROM users");
 
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
@@ -102,10 +102,9 @@ if ($result->num_rows > 0) {
       <?php foreach ($users as $user): ?>
         <tr>
           <td><?= htmlspecialchars($user['id']) ?></td>
-          <td><?= htmlspecialchars($user['username']) ?></td>
+          <td><?= htmlspecialchars($user['user_name']) ?></td>
           <td><?= htmlspecialchars($user['email']) ?></td>
           <td><?= htmlspecialchars($user['role']) ?></td>
-          <td><?= htmlspecialchars($user['created_at']) ?></td>
           <td class="action-buttons">
             <button onclick="editUser(<?= $user['id'] ?>)">Edit</button>
             <button onclick="deleteUser(<?= $user['id'] ?>)">Delete</button>

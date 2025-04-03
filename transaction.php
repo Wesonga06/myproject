@@ -1,6 +1,9 @@
 <?php
-// Database connection (ensure db_connect.php is included)
+// Database connection
 require 'db_connect.php';
+session_start();
+
+$user_id = $_SESSION['user_id']; // Retrieve the logged-in user's ID from the session
 
 $errorMessages = [];
 $isFormValid = true;
@@ -32,29 +35,35 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Insert into database
-    if ($isFormValid) {
-        $sql = "INSERT INTO transactions (category, type, amount, name, date) VALUES (?, ?, ?, ?, ?)";
+    if ($isFormValid && $user_id) {
+        $sql = "INSERT INTO transactions (user_id, category, type, amount, name, date) VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $db->prepare($sql);
 
         if ($stmt) {
-            $stmt->bind_param("ssdss", $category, $type, $amount, $name, $date);
+            $stmt->bind_param("issdss", $user_id, $category, $type, $amount, $name, $date);
             $stmt->execute();
             $stmt->close();
+            $successMessage = "Transaction added successfully!";
         } else {
-            echo "<p style='color: red;'>Failed to prepare the SQL statement: " . $db->error . "</p>";
+            $errorMessages["database"] = "Failed to prepare the SQL statement: " . $db->error;
         }
     }
 }
 
-// Fetch all transactions
+// Fetch all transactions for the logged-in user
 $transactions = [];
-$sql = "SELECT * FROM transactions ORDER BY id DESC";
-$result = $db->query($sql);
+if ($user_id) {
+    $sql = "SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC";
+    $stmt = $db->prepare($sql);
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $transactions[] = $row;
     }
+
+    $stmt->close();
 }
 ?>
   
@@ -168,7 +177,7 @@ if ($result->num_rows > 0) {
                 <li><a href="expenses.php">Expenses</a></li>
                 <li><a href="budget.php">Budget</a></li>
                 <li><a href="report.php">Report</a></li>
-                <li><a href="account.html">Account</a></li>
+                <li><a href="profile.php">Account</a></li>
             </ul>
         </nav>
     </header>

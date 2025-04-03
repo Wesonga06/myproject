@@ -65,105 +65,141 @@ $result->close();
   <title>Inventory - Money Tracker</title>
   <link rel="icon" href="MART.png" type="image">
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f9f9f9;
-      margin: 0;
-      padding: 20px;
-    }
-     /* Header */
-     header {
-      background-color: #2c3e50;
-      color: white;
-      padding: 15px;
-      text-align: center;
-    }
+  /* General Styling */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f9f9;
+    margin: 0;
+    padding: 0;
+}
 
+/* Header */
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Navigation Bar Styling */
+nav {
+    background-color: #2c3e50; /* Dark blue background for the navbar */
+    padding: 15px 0; /* Vertical padding for spacing */
+}
+
+nav ul {
+    list-style: none; /* Remove default bullets */
+    margin: 0;
+    padding: 0;
+    display: flex; /* Align items horizontally */
+    justify-content: center; /* Center the navigation links */
+    gap: 25px; /* Add even spacing between links */
+}
+
+nav ul li {
+    display: inline; /* Ensure links are inline */
+}
+
+nav ul li a {
+    text-decoration: none; /* Remove underline from links */ 
+    font-weight: bold; /* Bold text for emphasis */
+    padding: 10px 20px; /* Add padding inside the links */
+    border-radius: 5px; /* Slightly rounded corners for links */
+    transition: background-color 0.3s ease; /* Smooth hover effect */
+}
+
+nav ul li a:hover {
+    background-color: #34495e; /* Slightly lighter background on hover */
+    border-radius: 5px;
+}
+
+
+/* Footer */
+footer {
+    text-align: center;
+    background-color: #2c3e50;
+    color: white;
+    padding: 15px;
+    margin-top: 20px;
+    box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+/* Form */
+form {
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+form label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+}
+
+form input, form button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+form button {
+    background-color: #4CAF50;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s ease;
+}
+
+form button:hover {
+    background-color: #45a049;
+}
+
+/* List Styling */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+ul li {
+    background: #fff;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px; /* Increased border-radius for smoother look */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Improved shadow */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
     nav ul {
-      list-style: none;
-      padding: 0;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
+        flex-direction: column; /* Stack links on smaller screens */
+        gap: 10px; /* Adjust spacing for compact view */
     }
-
-    nav ul li a {
-      text-decoration: none;
-      color: white;
-      font-weight: bold;
-      padding: 10px 15px;
-      transition: 0.3s;
-    }
-
-    nav ul li a:hover {
-      background-color: #34495e;
-      border-radius: 5px;
-    }
-
-    footer {
-      background-color: #333;
-      color: white;
-      text-align: center;
-      padding: 10px 0;
-    }
-    form, ul {
-      max-width: 500px;
-      margin: auto;
-      padding: 20px;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    form label {
-      font-weight: bold;
-      display: block;
-      margin-top: 10px;
-    }
-    form input, form button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    form button {
-      background-color: #4CAF50;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      border: none;
-    }
-    form button:hover {
-      background-color: #45a049;
-    }
-    ul {
-      list-style: none;
-      padding: 0;
-    }
-    ul li {
-      background: #fff;
-      margin-bottom: 10px;
-      padding: 15px;
-      border-radius: 5px;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-  </style>
+}
+</style>
 </head>
 <body>
 <header>
-        <h1>Inventory</h1>
-        <img src="MART.png" alt="Money Accounting & Resource Tracking" width="100">
-        <nav>
-            <ul>
-              <li><a href="dashboard.php">Dashboard</a></li>
-              <li><a href="inventory.php">Inventory</a></li>
-              <li><a href="expenses.php">Expenses</a></li>
-              <li><a href="budget.php">Budget</a></li>
-              <li><a href="report.php">Report</a></li>
-              <li><a href="account.html">Account</a></li>
-            </ul>
-        </nav>
-    </header>
+    <h1 style=" background-color: #2c3e50; padding: 15px;">Inventory</h1>
+    <nav>
+        <ul>
+            <li><a href="dashboard.php">Dashboard</a></li>
+            <li><a href="inventory.php">Inventory</a></li>
+            <li><a href="expenses.php">Expenses</a></li>
+            <li><a href="budget.php">Budget</a></li>
+            <li><a href="report.php">Reports</a></li>
+            <li><a href="profile.php">Account</a></li>
+        </ul>
+    </nav>
+</header>
+
   <main>
     <!-- Display any feedback message -->
     <?php if (!empty($message)): ?>

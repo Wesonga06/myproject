@@ -2,25 +2,28 @@
 require 'db_connect.php'; // Include your database connection script
 session_start();
 
+// Ensure the user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php"); // Redirect to login
+    exit();
+}
 $user_id = $_SESSION['user_id'];
 
 // Initialize variables
 $message = "";
 
-// Handle form submission
+// Handle form submission for adding expenses
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $amount = $_POST["amount"];
     $date = $_POST["date"];
     $category = $_POST["category"];
-    $description = $_POST["description"];
+    $description = $_POST["description"] ?? "";
 
     // Validate inputs
     if (!empty($amount) && !empty($date) && !empty($category)) {
-        $sql = "INSERT INTO expenses (user_id, amount, date, category, description) VALUES (?, ?, ?, ?)";
-        $stmt = $db->prepare($sql);
-        
+        $stmt = $db->prepare("INSERT INTO expenses (user_id, amount, date, category, description) VALUES (?, ?, ?, ?, ?)");
         if ($stmt) {
-            $stmt->bind_param("dsss", $user_id, $amount, $date, $category, $description);
+            $stmt->bind_param("idsss", $user_id, $amount, $date, $category, $description);
 
             if ($stmt->execute()) {
                 $message = "Expense added successfully!";
@@ -39,13 +42,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 // Fetch all expenses
 $expenses = [];
-$result = $db->query("SELECT * FROM expenses WHERE user_id = $user_id ORDER BY date DESC");
+$stmt = $db->prepare("SELECT * FROM expenses WHERE user_id = ? ORDER BY date DESC");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+
 if ($result->num_rows > 0) {
     while ($row = $result->fetch_assoc()) {
         $expenses[] = $row;
     }
 }
+$stmt->close();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -186,7 +195,7 @@ if ($result->num_rows > 0) {
             <li><a href="expenses.php">Expenses</a></li>
             <li><a href="budget.php">Budget</a></li>
             <li><a href="report.php">Report</a></li>
-            <li><a href="account.html">Account</a></li>
+            <li><a href="profile.php">Account</a></li>
         </ul>
     </nav>
   </header>

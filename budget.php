@@ -185,7 +185,7 @@ if ($stmt) {
             <li><a href="expenses.php">Expenses</a></li>
             <li><a href="budget.php">Budget</a></li>
             <li><a href="report.php">Report</a></li>
-            <li><a href="account.html">Account</a></li>
+            <li><a href="profile.php">Account</a></li>
         </ul>
     </nav>
   </header>
