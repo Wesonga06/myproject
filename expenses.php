@@ -191,6 +191,7 @@ $stmt->close();
     <nav>
         <ul>
             <li><a href="dashboard.php">Dashboard</a></li>
+            <li><a href="Transaction.php">Transaction</a></li>
             <li><a href="inventory.php">Inventory</a></li>
             <li><a href="expenses.php">Expenses</a></li>
             <li><a href="budget.php">Budget</a></li>

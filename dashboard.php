@@ -117,6 +117,7 @@ $dashboard_message = "Welcome to your Money Tracking Dashboard! Manage your fina
         <div class="header-title">Money Tracking Dashboard</div>
         <div class="navbar">
             <a href="dashboard.php">Dashboard</a>
+            <a href="transaction.php">Transaction</a>
             <a href="inventory.php">Inventory</a>
             <a href="expenses.php">Expenses</a>
             <a href="budget.php">Budget</a>
